@@ -1,0 +1,163 @@
+﻿@page
+@using Shortly.Extensions
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="level">
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Total Links</p>
+                <p class="title">@Model.Links.Count</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Total Clicks</p>
+                <p class="title">@Model.Links.Sum(l => l.Clicks)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="columns is-centered">
+        <div class="column is-half">
+            <div class="card">
+                <header class="card-header">
+                    <p class="card-header-title">Create Short Link</p>
+                </header>
+                <div class="card-content">
+                    <form method="post">
+                        <div asp-validation-summary="ModelOnly" class="has-text-danger"></div>
+                        <div class="field">
+                            <label asp-for="OriginalUrl" class="label">URL</label>
+                            <div class="control">
+                                <input asp-for="OriginalUrl" class="input" placeholder="https://example.com/very/long/url" />
+                            </div>
+                            <span asp-validation-for="OriginalUrl" class="help is-danger"></span>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-primary is-fullwidth">Shorten</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Links.Count > 0)
+    {
+        <h2 class="title is-4 mt-5">My Links</h2>
+        <div class="table-container">
+            <table class="table is-striped is-hoverable is-fullwidth">
+                <thead>
+                    <tr>
+                        <th style="width: 280px;">Short URL</th>
+                        <th>Original URL</th>
+                        <th style="width: 80px;">Clicks</th>
+                        <th style="width: 100px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var link in Model.Links)
+                    {
+                        <tr>
+                            <td>
+                                <div class="field has-addons">
+                                    <div class="control is-expanded">
+                                        <input class="input is-small" type="text"
+                                               value="@($"{ViewContext.HttpContext.Request.Scheme}://{ViewContext.HttpContext.Request.Host}/{link.ShortUrl}")"
+                                               readonly id="shortUrl-@link.Id" />
+                                    </div>
+                                    <div class="control">
+                                        <button class="button is-small is-info" onclick="copyToClipboard('shortUrl-@link.Id')">Copy</button>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="@link.Url" target="_blank" title="@link.Url">
+                                    @link.Url.Truncate(50)
+                                </a>
+                            </td>
+                            <td>
+                                <span class="tag is-light">@link.Clicks</span>
+                            </td>
+                            <td>
+                                <a href="/@link.ShortUrl" class="button is-small is-light" target="_blank">
+                                    Visit
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="message is-info mt-5">
+            <div class="message-body has-text-centered">
+                <p class="subtitle">No links yet.</p>
+                <p>Create your first one above!</p>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <section class="hero is-primary is-bold is-medium">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title is-1">Shortly</h1>
+                <p class="subtitle is-4">A simple URL shortener. Log in to create shortened links.</p>
+                <a asp-page="/Login" class="button is-light is-large">Login</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="columns">
+            <div class="column">
+                <div class="card has-text-centered">
+                    <div class="card-content">
+                        <p class="title is-3">🔗</p>
+                        <p class="title is-5">Shorten Links</p>
+                        <p class="content">Turn long URLs into short, memorable links.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card has-text-centered">
+                    <div class="card-content">
+                        <p class="title is-3">📊</p>
+                        <p class="title is-5">Track Clicks</p>
+                        <p class="content">Monitor how many times each link is visited.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="column">
+                <div class="card has-text-centered">
+                    <div class="card-content">
+                        <p class="title is-3">🔐</p>
+                        <p class="title is-5">Secure</p>
+                        <p class="content">Your links are private and only you can manage them.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script>
+        function copyToClipboard(id) {
+            const input = document.getElementById(id);
+            input.select();
+            navigator.clipboard.writeText(input.value);
+        }
+    </script>
+}

@@ -1,0 +1,200 @@
+﻿@startuml
+skin rose
+' hide empty members
+left to right direction
+
+skinparam  {
+    defaultFontName             "Ubuntu"
+    defaultFontSize             16
+    shadowing                   true
+    RoundCorner                 10
+    packageBackgroundColor      LightGoldenRodYellow
+    classBackgroundColor        AntiqueWhite
+    backgroundColor             transparent
+    dpi                         120
+}
+
+title DotNet Class Model for Shortly Platform
+
+package Shortly <<Frame>> {
+
+    package "Shortly.Domain.Entities" #palegreen {
+
+        class Link {
+            + Id: long
+            + Url: string
+            + ShortUrl: string
+            + Clicks: int
+            + UserId: long
+            + User: User
+            - Link()
+            + Link(url: string, shortUrl: string, userId: long)
+            + IncrementClicks(): void
+        }
+
+        class User {
+            + Id: long
+            + Email: string
+            + Password: string
+            + Links: ICollection<Link>
+            - User()
+            + User(email: string, password: string)
+        }
+        User "1" --> "*" Link : Links
+    }
+
+    package "Shortly.Application.DTOs" #lightsteelblue {
+
+        class LinkResponse {
+            + Id: long
+            + Url: string
+            + ShortUrl: string
+            + Clicks: int
+            + {static} From(link: Link): LinkResponse
+        }
+
+        class UserResponse {
+            + Id: long
+            + Email: string
+            + {static} From(user: User): UserResponse
+        }
+        LinkResponse ..> Link : <<maps>>
+        UserResponse ..> User : <<maps>>
+    }
+
+    package "Shortly.Application.Interfaces" #lightsteelblue {
+
+        interface IUserService {
+            + Register(email: string, password: string): Task<UserResponse>
+            + GetAllUsers(): Task<List<UserResponse>>
+            + Login(email: string, password: string): Task<UserResponse>
+            + GetUserByEmail(email: string): Task<UserResponse>
+        }
+
+        interface ILinkService {
+            + CreateLink(url: string, userId: long): Task<LinkResponse>
+            + IncrementClicks(linkId: long): Task<LinkResponse>
+            + GetLink(shortUrl: string): Task<LinkResponse>
+            + GetAllLinks(): Task<List<LinkResponse>>
+            + GetLinksByUserId(userId: long): Task<List<LinkResponse>>
+        }
+
+        interface IUserRepository {
+            + GetByEmailAsync(email: string): Task<User?>
+            + ExistsByEmailAsync(email: string): Task<bool>
+            + GetAllAsync(): Task<List<User>>
+            + AddAsync(user: User): Task
+            + SaveChangesAsync(): Task
+        }
+
+        interface ILinkRepository {
+            + GetByIdAsync(id: long): Task<Link?>
+            + GetByShortUrlAsync(shortUrl: string): Task<Link?>
+            + GetAllAsync(): Task<List<Link>>
+            + GetByUserIdAsync(userId: long): Task<List<Link>>
+            + AddAsync(link: Link): Task
+            + SaveChangesAsync(): Task
+        }
+    }
+
+    package "Shortly.Application.Services" #lightsteelblue {
+
+        class UserService {
+            - _logger: ILogger<UserService>
+            - _userRepository: IUserRepository
+            - _failedAttempts: ConcurrentDictionary<string, ConcurrentQueue<DateTime>>
+            + UserService(userRepository: IUserRepository, logger: ILogger<UserService>)
+            + Register(email: string, password: string): Task<UserResponse>
+            + GetAllUsers(): Task<List<UserResponse>>
+            + Login(email: string, password: string): Task<UserResponse>
+            + GetUserByEmail(email: string): Task<UserResponse>
+            - NormalizeEmail(email: string): string
+            - CheckRateLimit(email: string): void
+            - RecordFailedAttempt(email: string): void
+            - ResetFailedAttempts(email: string): void
+        }
+        UserService ..|> IUserService: <<implements>>
+        UserService --> "1" IUserRepository
+
+        class LinkService {
+            - _logger: ILogger<LinkService>
+            - _linkRepository: ILinkRepository
+            + LinkService(linkRepository: ILinkRepository, logger: ILogger<LinkService>)
+            + CreateLink(url: string, userId: long): Task<LinkResponse>
+            + IncrementClicks(linkId: long): Task<LinkResponse>
+            + GetLink(shortUrl: string): Task<LinkResponse>
+            + GetAllLinks(): Task<List<LinkResponse>>
+            + GetLinksByUserId(userId: long): Task<List<LinkResponse>>
+            - GenerateShortUrl(): string
+        }
+        LinkService ..|> ILinkService: <<implements>>
+        LinkService --> "1" ILinkRepository
+    }
+
+    package "Shortly.Infrastructure.Persistence" #lightblue {
+
+        class AppDbContext extends DbContext {
+            + Users: DbSet<User>
+            + Links: DbSet<Link>
+            + AppDbContext(options: DbContextOptions<AppDbContext>)
+        }
+        AppDbContext ..> User: <<uses>>
+        AppDbContext ..> Link: <<uses>>
+    }
+
+    package "Shortly.Infrastructure.Repositories" #lightcoral {
+
+        class UserRepository {
+            - _context: AppDbContext
+            + UserRepository(context: AppDbContext)
+            + GetByEmailAsync(email: string): Task<User?>
+            + ExistsByEmailAsync(email: string): Task<bool>
+            + GetAllAsync(): Task<List<User>>
+            + AddAsync(user: User): Task
+            + SaveChangesAsync(): Task
+        }
+        UserRepository ..|> IUserRepository: <<implements>>
+        UserRepository --> "1" AppDbContext
+
+        class LinkRepository {
+            - _context: AppDbContext
+            + LinkRepository(context: AppDbContext)
+            + GetByIdAsync(id: long): Task<Link?>
+            + GetByShortUrlAsync(shortUrl: string): Task<Link?>
+            + GetAllAsync(): Task<List<Link>>
+            + GetByUserIdAsync(userId: long): Task<List<Link>>
+            + AddAsync(link: Link): Task
+            + SaveChangesAsync(): Task
+        }
+        LinkRepository ..|> ILinkRepository: <<implements>>
+        LinkRepository --> "1" AppDbContext
+    }
+
+    package "Shortly.Infrastructure" #lightcoral {
+
+        class DbInitializer {
+            + {static} InitializeAsync(db: AppDbContext, adminPassword: string): Task
+        }
+        DbInitializer ..> AppDbContext: <<uses>>
+
+        class MemoryCacheTicketStore {
+            - _cache: IDistributedCache
+            + MemoryCacheTicketStore(cache: IDistributedCache)
+            + StoreAsync(ticket: AuthenticationTicket): Task<string>
+            + RenewAsync(key: string, ticket: AuthenticationTicket): Task
+            + RetrieveAsync(key: string): Task<AuthenticationTicket?>
+            + RemoveAsync(key: string): Task
+        }
+    }
+
+    package "Shortly.Endpoints" #lightsteelblue {
+
+        class UrlRedirectEndpoint {
+            + {static} MapUrlRedirect(app: WebApplication): void
+        }
+        UrlRedirectEndpoint ..> ILinkService: <<uses>>
+    }
+
+}
+
+@enduml

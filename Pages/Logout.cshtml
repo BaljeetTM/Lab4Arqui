@@ -1,0 +1,28 @@
+@page
+@model LogoutModel
+@{
+    ViewData["Title"] = "Logout";
+}
+
+<div class="columns is-centered">
+    <div class="column is-one-third">
+        <div class="card">
+            <header class="card-header">
+                <p class="card-header-title">Logout</p>
+            </header>
+            <div class="card-content has-text-centered">
+                <p class="subtitle">Are you sure you want to log out?</p>
+                <form method="post">
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button type="submit" class="button is-danger">Logout</button>
+                        </div>
+                        <div class="control">
+                            <a asp-page="/Index" class="button is-light">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

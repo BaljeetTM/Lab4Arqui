@@ -1,0 +1,64 @@
+@startuml
+
+skin rose
+hide empty members
+hide empty method
+left to right direction
+
+skinparam  {
+    defaultFontName             "Ubuntu"
+    defaultFontSize             16
+    shadowing                   true
+    RoundCorner                 10
+    packageBackgroundColor      LightGoldenRodYellow
+    classBackgroundColor        AntiqueWhite
+    backgroundColor             transparent
+    dpi                         120
+}
+
+title Domain Model for Shortly Platform
+
+package Shortly <<Frame>> {
+
+    package Entities #palegreen {
+
+        entity Link {
+            * id: Long
+            * url: String
+            * shortUrl: String
+            * clicks: Integer
+            * userId: Long
+        }
+
+        entity User {
+            * id: Long
+            * email: String
+            * password: String
+        }
+        User "1" -- "*" Link : > owns
+    }
+
+    package Services #lavender {
+
+        entity UserService {
+            + register(email, password): User
+            + login(email, password): User
+            + getByEmail(email): User
+            + getAllUsers(): List<User>
+        }
+
+        entity LinkService {
+            + createLink(url, userId): Link
+            + getLink(shortUrl): Link
+            + getAllLinks(): List<Link>
+            + getLinksByUser(userId): List<Link>
+            + incrementClicks(linkId): Link
+        }
+
+        UserService ..> User : uses
+        LinkService ..> Link : uses
+
+    }
+}
+
+@enduml

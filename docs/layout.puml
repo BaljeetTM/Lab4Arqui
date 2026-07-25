@@ -1,0 +1,122 @@
+﻿@startuml
+skin rose
+hide empty members
+hide empty method
+left to right direction
+
+skinparam  {
+    defaultFontName             "Ubuntu"
+    defaultFontSize             16
+    shadowing                   true
+    RoundCorner                 10
+    packageBackgroundColor      LightGoldenRodYellow
+    classBackgroundColor        AntiqueWhite
+    backgroundColor             transparent
+    dpi                         120
+}
+
+title Directory Layout for Shortly Platform
+
+package Shortly {
+
+    package Application {
+        package DTOs {
+            class "LinkResponse.cs" as LinkResponse
+            class "UserResponse.cs" as UserResponse
+        }
+        package Interfaces {
+            class "ILinkRepository.cs" as ILinkRepository
+            class "ILinkService.cs" as ILinkService
+            class "IUserRepository.cs" as IUserRepository
+            class "IUserService.cs" as IUserService
+        }
+        package Services {
+            class "LinkService.cs" as LinkService
+            class "UserService.cs" as UserService
+        }
+    }
+
+    package Domain {
+        package Entities {
+            class "Link.cs" as Link
+            class "User.cs" as User
+        }
+    }
+
+    package Endpoints {
+        class "UrlRedirectEndpoint.cs" as UrlRedirectEndpoint
+    }
+
+    package Extensions {
+        class "StringExtensions.cs" as StringExtensions
+    }
+
+    package Infrastructure {
+        package Persistence {
+            class "AppDbContext.cs" as AppDbContext
+        }
+        package Repositories {
+            class "LinkRepository.cs" as LinkRepository
+            class "UserRepository.cs" as UserRepository
+        }
+        class "DbInitializer.cs" as DbInitializer
+        class "MemoryCacheTicketStore.cs" as MemoryCacheTicketStore
+    }
+
+    package Pages {
+        class "Error.cshtml.cs" as ErrorPage
+        class "Index.cshtml.cs" as IndexPage
+        class "Login.cshtml.cs" as LoginPage
+        class "Logout.cshtml.cs" as LogoutPage
+        class "Register.cshtml.cs" as RegisterPage
+    }
+
+}
+
+' === Dependency arrows ===
+
+' Services → Interfaces (implements)
+LinkService ..|> ILinkService : implements
+UserService ..|> IUserService : implements
+
+' Repositories → Interfaces (implements)
+LinkRepository ..|> ILinkRepository : implements
+UserRepository ..|> IUserRepository : implements
+
+' Repositories → Persistence
+LinkRepository ..> AppDbContext : uses
+UserRepository ..> AppDbContext : uses
+
+' Repositories → Domain
+LinkRepository ..> Link : maps
+UserRepository ..> User : maps
+
+' DbContext → Domain
+AppDbContext ..> Link : DbSet
+AppDbContext ..> User : DbSet
+
+' Services → DTOs
+LinkService ..> LinkResponse : returns
+UserService ..> UserResponse : returns
+
+' Services → Domain
+LinkService ..> Link : creates
+UserService ..> User : creates
+
+' DbInitializer → Infrastructure
+DbInitializer ..> AppDbContext : configures
+
+' DbInitializer → Domain
+DbInitializer ..> User : seeds
+DbInitializer ..> Link : seeds
+
+' Endpoints → Application
+UrlRedirectEndpoint ..> ILinkService : uses
+
+' Pages → Application
+IndexPage ..> ILinkService : uses
+IndexPage ..> LinkResponse : displays
+LoginPage ..> IUserService : uses
+RegisterPage ..> IUserService : uses
+
+@enduml

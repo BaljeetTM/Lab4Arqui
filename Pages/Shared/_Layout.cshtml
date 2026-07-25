@@ -1,0 +1,81 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Shortly</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a class="navbar-item has-text-weight-bold" asp-area="" asp-page="/Index">Shortly</a>
+                    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div id="navbarMenu" class="navbar-menu">
+                    <div class="navbar-start">
+                        <a class="navbar-item" asp-area="" asp-page="/Index">Home</a>
+                    </div>
+                    <div class="navbar-end">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a class="navbar-item" asp-area="" asp-page="/Logout">Logout</a>
+                        }
+                        else
+                        {
+                            <a class="navbar-item" asp-area="" asp-page="/Login">Login</a>
+                            <a class="navbar-item" asp-area="" asp-page="/Register">Register</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="section">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <p>&copy; 2026 - Shortly</p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <p class="is-size-7 has-text-grey">A URL shortener built with ASP.NET Core &#38; Bulma for Arquitectura de Sistemas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const burger = document.querySelector('.navbar-burger');
+            const menu = document.querySelector('.navbar-menu');
+            if (burger && menu) {
+                burger.addEventListener('click', () => {
+                    burger.classList.toggle('is-active');
+                    menu.classList.toggle('is-active');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

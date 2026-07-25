@@ -1,0 +1,68 @@
+@startuml
+
+skin rose
+hide empty members
+hide empty method
+left to right direction
+
+skinparam  {
+    defaultFontName             "Ubuntu"
+    defaultFontSize             16
+    shadowing                   true
+    RoundCorner                 10
+    packageBackgroundColor      LightGoldenRodYellow
+    classBackgroundColor        AntiqueWhite
+    backgroundColor             transparent
+    dpi                         120
+    ' handwritten                 true
+}
+
+title Class Model for Shortly Platform
+
+package Shortly <<Frame>> {
+
+    package models #palegreen {
+
+        class Link {
+            - id: Long
+            - url: String
+            - shortUrl: String
+            - clicks: Long
+            + Link(..)
+        }
+
+        class User {
+            - id: Long
+            - email: String
+            - password: String
+            + User(..)
+        }
+        User "1" --> "*" Link: - list<Link>
+    }
+
+    package services #lavender {
+
+        class UserService {
+            + UserService(..)
+            + register(user: User): User
+            + login(email: String, password: String): User
+            + retrieve(email: String): User
+            + retrieve(): List<User>
+        }
+        UserService ..> User: <<uses>>
+
+        class LinkService {
+            + LinkService(..)
+            + create(url: String, userId: Long): Link
+            + incrementsClicks(linkId: Long): Long
+            + retrieve(short: String): Link
+            + retrieve(linkId: Long): Link
+            + retrieve(): List<Link>
+        }
+        LinkService ..> Link: <<uses>>
+
+    }
+
+}
+
+@enduml
