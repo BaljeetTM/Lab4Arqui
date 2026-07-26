@@ -1,0 +1,24 @@
+@startuml Nivel3-Componentes-IdentityService
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Identity Service - Diagrama de Componentes (C4 Nivel 3)
+
+Person(usuario, "Usuario", "Se registra e inicia sesión")
+
+Container_Boundary(identity, "Identity Service") {
+    Component(authEndpoints, "Auth Endpoints", "Minimal API", "Register / Login")
+    Component(userService, "User Service", "C#", "Lógica de negocio y rate limiting")
+    Component(userRepository, "User Repository", "C# / EF Core", "Acceso a datos de usuario")
+}
+
+ContainerDb_Ext(identityDb, "BD usuarios", "PostgreSQL", "Usuarios y credenciales")
+
+Rel(usuario, authEndpoints, "POST /register, /login")
+Rel(authEndpoints, userService, "Invoca lógica de negocio")
+Rel(userService, userRepository, "Consulta / persiste")
+Rel(userRepository, identityDb, "Lee/escribe")
+
+@enduml

@@ -1,0 +1,48 @@
+@startuml Nivel2-DiagramaDeContenedores
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Contenedores del sistema
+
+Person(anonymousUser, "Persona anónima", "Usa una URL acortada")
+Person(registeredUser, "Usuario registrado", "Crea y gestiona enlaces")
+
+System_Boundary(shortly, "Shortly") {
+    Container(gateway, "API Gateway", "ASP.NET Core / YARP", "Punto de entrada único, enrutamiento y validación de auth")
+
+    Container(identity, "Identity Service", "ASP.NET Core", "Registro, login y gestión de usuarios")
+    ContainerDb(identityDb, "BD usuarios", "PostgreSQL", "Usuarios y credenciales")
+
+    Container(url, "URL Service", "ASP.NET Core", "Creación y gestión de enlaces")
+    ContainerDb(urlDb, "BD enlaces", "PostgreSQL", "Enlaces y su metadata")
+
+    Container(redirect, "Redirect Service", "ASP.NET Core", "Resuelve ShortURL y redirige")
+    ContainerDb(redirectCache, "Cache de enlaces", "Redis", "Lookup rápido ShortURL -> URL")
+
+    Container(stats, "Stats Service", "ASP.NET Core", "Agrega y sirve estadísticas de clics")
+    ContainerDb(statsDb, "BD clics", "PostgreSQL", "Conteo de clics")
+
+    ContainerQueue(broker, "Message broker", "RabbitMQ / Kafka", "Eventos de clics")
+}
+
+Rel(anonymousUser, gateway, "Visita ShortURL")
+Rel(registeredUser, gateway, "Usa")
+
+Rel(gateway, identity, "Enruta autenticación")
+Rel(gateway, url, "Enruta gestión de enlaces")
+Rel(gateway, redirect, "Enruta redirecciones")
+Rel(gateway, stats, "Enruta consultas de estadísticas")
+
+Rel(identity, identityDb, "Lee/escribe")
+Rel(url, urlDb, "Lee/escribe")
+
+Rel(url, redirectCache, "Actualiza al crear/editar enlace")
+Rel(redirect, redirectCache, "Lee")
+
+Rel(redirect, broker, "Publica evento de clic")
+Rel(broker, stats, "Consume evento de clic")
+Rel(stats, statsDb, "Lee/escribe")
+
+@enduml

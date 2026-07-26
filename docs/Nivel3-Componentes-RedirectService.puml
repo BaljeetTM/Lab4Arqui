@@ -1,0 +1,26 @@
+@startuml Nivel3-Componentes-RedirectService
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Redirect Service - Diagrama de Componentes (C4 Nivel 3)
+
+Person(anonymousUser, "Persona anónima", "Sigue una ShortURL y lo redirige a la URL de destino. ")
+
+Container_Boundary(redirect, "Redirect Service") {
+    Component(endpoint, "Redirect Endpoint", "Minimal API", "Resuelve GET /{shortUrl}")
+    Component(lookup, "Link Lookup", "C#", "Consulta el cache de enlaces")
+    Component(publisher, "Click Publisher", "C#", "Publica el evento de clic")
+}
+
+ContainerDb_Ext(cache, "Cache de enlaces", "Redis", "Lookup ShortURL -> URL")
+ContainerQueue_Ext(broker, "Message broker", "RabbitMQ / Kafka", "Eventos de clic")
+
+Rel(anonymousUser, endpoint, "GET /{shortUrl}")
+Rel(endpoint, lookup, "Solicita URL destino")
+Rel(lookup, cache, "Lee")
+Rel(endpoint, publisher, "Notifica clic recibido")
+Rel(publisher, broker, "Publica evento")
+
+@enduml

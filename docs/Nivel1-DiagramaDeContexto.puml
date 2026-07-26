@@ -1,0 +1,22 @@
+@startuml Nivel1-DiagramaDeContexto
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+title Diagrama de contexto del sistema
+
+Person(anonymousUser, "Persona anónima", "Sigue una ShortURL y espera ser redirigido a la URL de destino.")
+Person(registeredUser, "Usuario registrado", "Inicia sesión con email/contraseña; crea, gestiona y monitorea ShortURLs.")
+
+System(shortly, "Plataforma Shortly", "Permite crear ShortURLs, redirige visitantes a la URL de destino, y registra estadísticas de clics.")
+
+SystemDb_Ext(database, "Base de datos relacional", "En SQLite. Almacena cuentas de usuario y registros de links.")
+System_Ext(cacheStore, "Caché distribuido", "Almacena tickets de sesión de autenticación en el servidor.")
+System_Ext(logSink, "Sistema de logging y monitoreo", "Recolecta logs estructurados (Serilog) y telemetría de rendimiento/requests lentas.")
+
+Rel(anonymousUser, shortly, "Visita una ShortURL")
+Rel(registeredUser, shortly, "Usa")
+Rel(shortly, database, "Lee y escribe usuarios y links")
+Rel(shortly, cacheStore, "Almacena/recupera tickets de sesión")
+Rel(shortly, logSink, "Envía logs estructurados y métricas")
+
+@enduml
